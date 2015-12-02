@@ -80,6 +80,7 @@ OBJECTS = src/core/callsite@obj@ \
           src/core/ops@obj@ \
           src/core/hll@obj@ \
           src/core/loadbytecode@obj@ \
+          src/math/int@obj@ \
           src/math/num@obj@ \
           src/core/coerce@obj@ \
           src/core/dll@obj@ \

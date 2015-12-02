@@ -745,11 +745,11 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
                 cur_op += 4;
                 goto NEXT;
             OP(blshift_i):
-                GET_REG(cur_op, 0).i64 = GET_REG(cur_op, 2).i64 << GET_REG(cur_op, 4).i64;
+                GET_REG(cur_op, 0).i64 = MVM_int_shl(tc, GET_REG(cur_op, 2).i64, GET_REG(cur_op, 4).i64);
                 cur_op += 6;
                 goto NEXT;
             OP(brshift_i):
-                GET_REG(cur_op, 0).i64 = GET_REG(cur_op, 2).i64 >> GET_REG(cur_op, 4).i64;
+                GET_REG(cur_op, 0).i64 = MVM_int_shr(tc, GET_REG(cur_op, 2).i64, GET_REG(cur_op, 4).i64);
                 cur_op += 6;
                 goto NEXT;
             OP(pow_i): {
