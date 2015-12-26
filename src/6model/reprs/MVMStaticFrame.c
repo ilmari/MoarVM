@@ -37,7 +37,7 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
         /* Easy - the source MVMStaticFrameBody doesn't own the memory. */
         dest_body->bytecode = src_body->bytecode;
     }
-    else {
+    else if (src_body->bytecode_size) {
         /* We're going to need to make a copy, in case the source object gets
            GC'd before we do, and so they free memory we point to. */
         /* If this gets to be a resource hog, then implement something more
@@ -54,15 +54,16 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
     MVM_ASSIGN_REF(tc, &(dest_root->header), dest_body->static_code, src_body->static_code);
 
     dest_body->num_locals = src_body->num_locals;
-    dest_body->num_lexicals = src_body->num_lexicals;
-    {
-        MVMuint16 *local_types = MVM_malloc(sizeof(MVMuint16) * src_body->num_locals);
-        MVMuint16 *lexical_types = MVM_malloc(sizeof(MVMuint16) * src_body->num_lexicals);
-        memcpy(local_types, src_body->local_types, sizeof(MVMuint16) * src_body->num_locals);
-        memcpy(lexical_types, src_body->lexical_types, sizeof(MVMuint16) * src_body->num_lexicals);
-        dest_body->local_types = local_types;
-        dest_body->lexical_types = lexical_types;
+    if (src_body->num_locals) {
+        dest_body->local_types = MVM_malloc(sizeof(MVMuint16) * src_body->num_locals);
+        memcpy(dest_body->local_types, src_body->local_types, sizeof(MVMuint16) * src_body->num_locals);
     }
+    dest_body->num_lexicals = src_body->num_lexicals;
+    if (src_body->num_lexicals) {
+        dest_body->lexical_types = MVM_malloc(sizeof(MVMuint16) * src_body->num_lexicals);
+        memcpy(dest_body->lexical_types, src_body->lexical_types, sizeof(MVMuint16) * src_body->num_lexicals);
+    }
+
     {
         MVMLexicalRegistry *current, *tmp;
         unsigned bucket_tmp;
@@ -109,8 +110,10 @@ static void copy_to(MVMThreadContext *tc, MVMSTable *st, void *src, MVMObject *d
         MVM_ASSIGN_REF(tc, &(dest_root->header), dest_body->outer, src_body->outer);
 
     dest_body->num_handlers = src_body->num_handlers;
-    dest_body->handlers     = MVM_malloc(src_body->num_handlers * sizeof(MVMFrameHandler));
-    memcpy(dest_body->handlers, src_body->handlers, src_body->num_handlers * sizeof(MVMFrameHandler));
+    if (src_body->num_handlers) {
+        dest_body->handlers     = MVM_malloc(src_body->num_handlers * sizeof(MVMFrameHandler));
+        memcpy(dest_body->handlers, src_body->handlers, src_body->num_handlers * sizeof(MVMFrameHandler));
+    }
     dest_body->instrumentation_level = 0;
     dest_body->pool_index            = src_body->pool_index;
     dest_body->num_annotations       = src_body->num_annotations;
