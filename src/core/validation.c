@@ -11,9 +11,6 @@
 #define GET_REG(pc, idx)    *((MVMuint16 *)(pc + idx))
 #define GET_I16(pc, idx)    *((MVMint16 *)(pc + idx))
 #define GET_UI16(pc, idx)   *((MVMuint16 *)(pc + idx))
-#define GET_I32(pc, idx)    *((MVMint32 *)(pc + idx))
-#define GET_UI32(pc, idx)   *((MVMuint32 *)(pc + idx))
-#define GET_N32(pc, idx)    *((MVMnum32 *)(pc + idx))
 
 #define MSG(val, msg) "Bytecode validation error at offset %" PRIu32 \
     ", instruction %" PRIu32 ":\n" msg, \
@@ -383,7 +380,7 @@ static void validate_operands(Validator *val) {
             MVMint64 count;
 
             validate_literal_operand(val, operands[0]);
-            count = MVM_BC_get_I64(val->cur_op, -8);
+            count = GET_I64(val->cur_op, -8);
             if (count < 0 || count > UINT32_MAX)
                 fail(val, MSG(val, "illegal jumplist label count %" PRIi64),
                         count);
@@ -410,7 +407,7 @@ static void validate_sequence(Validator *val) {
         case 'j': {
             ensure_op(val, MVM_OP_jumplist);
             validate_operands(val);
-            val->remaining_jumplabels = (MVMuint32)MVM_BC_get_I64(val->cur_op, -10);
+            val->remaining_jumplabels = (MVMuint32)GET_I64(val->cur_op, -10);
             break;
         }
 

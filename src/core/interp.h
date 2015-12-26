@@ -94,24 +94,43 @@ struct MVMOpInfo {
 void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContext *, void *), void *invoke_data);
 MVM_PUBLIC void MVM_interp_enable_tracing();
 
-MVM_STATIC_INLINE MVMint64 MVM_BC_get_I64(const MVMuint8 *cur_op, int offset) {
-    const MVMuint8 *const where = cur_op + offset;
-#ifdef MVM_CAN_UNALIGNED_INT64
-    return *(MVMint64 *)where;
-#else
-    MVMint64 temp;
-    memmove(&temp, where, sizeof(MVMint64));
-    return temp;
-#endif
-}
+#define DECLARE_MVM_BC_GET_ALIGNED(short_type, long_type)                          \
+    MVM_STATIC_INLINE long_type MVM_BC_get_ ## short_type (const MVMuint8 *cur_op, int offset) {  \
+        long_type temp;                                                                      \
+        memmove(&temp, (cur_op + offset), sizeof(long_type));      \
+        return temp;                                                                     \
+    }
 
-MVM_STATIC_INLINE MVMnum64 MVM_BC_get_N64(const MVMuint8 *cur_op, int offset) {
-    const MVMuint8 *const where = cur_op + offset;
-#ifdef MVM_CAN_UNALIGNED_NUM64
-    return *(MVMnum64 *)where;
+#define DECLARE_MVM_BC_GET_UNALIGNED(short_type, long_type)               \
+    MVM_STATIC_INLINE long_type MVM_BC_get_ ## short_type (const MVMuint8 *cur_op, int offset) {  \
+        return *(long_type *) (cur_op + offset);                        \
+    } \
+
+#ifdef MVM_CAN_UNALIGNED_INT32
+DECLARE_MVM_BC_GET_UNALIGNED(I32, MVMint32)
+DECLARE_MVM_BC_GET_UNALIGNED(UI32, MVMuint32)
+DECLARE_MVM_BC_GET_UNALIGNED(N32, MVMnum32)
 #else
-    MVMnum64 temp;
-    memmove(&temp, cur_op + offset, sizeof(MVMnum64));
-    return temp;
+DECLARE_MVM_BC_GET_ALIGNED(I32, MVMint32)
+DECLARE_MVM_BC_GET_ALIGNED(UI32, MVMuint32)
+DECLARE_MVM_BC_GET_ALIGNED(N32, MVMnum32)
 #endif
-}
+
+#define GET_I32  MVM_BC_get_I32
+#define GET_UI32 MVM_BC_get_UI32
+#define GET_N32  MVM_BC_get_N32
+
+#ifdef MVM_CAN_UNALIGNED_INT64
+DECLARE_MVM_BC_GET_UNALIGNED(I64, MVMint64)
+#else
+DECLARE_MVM_BC_GET_ALIGNED(I64, MVMint64)
+#endif
+
+#ifdef MVM_CAN_UNALIGNED_NUM64
+DECLARE_MVM_BC_GET_UNALIGNED(N64, MVMnum64)
+#else
+DECLARE_MVM_BC_GET_ALIGNED(N64, MVMnum64)
+#endif
+
+#define GET_I64 MVM_BC_get_I64
+#define GET_N64 MVM_BC_get_N64

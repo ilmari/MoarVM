@@ -10,9 +10,6 @@
 #define GET_UI8(pc, idx)    *((MVMuint8 *)((pc) + (idx)))
 #define GET_I16(pc, idx)    *((MVMint16 *)((pc) + (idx)))
 #define GET_UI16(pc, idx)   *((MVMuint16 *)((pc) + (idx)))
-#define GET_I32(pc, idx)    *((MVMint32 *)((pc) + (idx)))
-#define GET_UI32(pc, idx)   *((MVMuint32 *)((pc) + (idx)))
-#define GET_N32(pc, idx)    *((MVMnum32 *)((pc) + (idx)))
 
 /* Allocate a piece of memory from the spesh graph's buffer. Deallocated when
  * the spesh graph is. */
@@ -203,7 +200,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
                     arg_size += 4;
                     break;
                 case MVM_operand_int64:
-                    ins_node->operands[i].lit_i64 = MVM_BC_get_I64(args, arg_size);
+                    ins_node->operands[i].lit_i64 = GET_I64(args, arg_size);
                     arg_size += 8;
                     break;
                 case MVM_operand_num32:
@@ -211,7 +208,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
                     arg_size += 4;
                     break;
                 case MVM_operand_num64:
-                    ins_node->operands[i].lit_n64 = MVM_BC_get_N64(args, arg_size);
+                    ins_node->operands[i].lit_n64 = GET_N64(args, arg_size);
                     arg_size += 8;
                     break;
                 case MVM_operand_callsite:
@@ -270,7 +267,7 @@ static void build_cfg(MVMThreadContext *tc, MVMSpeshGraph *g, MVMStaticFrame *sf
          * we jump to the instruction after the n jump points if none match,
          * so that is marked too. */
         if (opcode == MVM_OP_jumplist) {
-            MVMint64 n = MVM_BC_get_I64(args, 0);
+            MVMint64 n = GET_I64(args, 0);
             for (i = 0; i <= n; i++)
                 byte_to_ins_flags[(pc - g->bytecode) + 12 + i * 6] |= MVM_CFG_BB_START;
             byte_to_ins_flags[pc - g->bytecode] |= MVM_CFG_BB_END;

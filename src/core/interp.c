@@ -7,9 +7,6 @@
 #define GET_LEX(pc, idx, f) f->env[*((MVMuint16 *)(pc + idx))]
 #define GET_I16(pc, idx)    *((MVMint16 *)(pc + idx))
 #define GET_UI16(pc, idx)   *((MVMuint16 *)(pc + idx))
-#define GET_I32(pc, idx)    *((MVMint32 *)(pc + idx))
-#define GET_UI32(pc, idx)   *((MVMuint32 *)(pc + idx))
-#define GET_N32(pc, idx)    *((MVMnum32 *)(pc + idx))
 
 #define NEXT_OP (op = *(MVMuint16 *)(cur_op), cur_op += 2, op)
 
@@ -347,13 +344,13 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
             OP(const_i32):
                 MVM_exception_throw_adhoc(tc, "const_iX NYI");
             OP(const_i64):
-                GET_REG(cur_op, 0).i64 = MVM_BC_get_I64(cur_op, 2);
+                GET_REG(cur_op, 0).i64 = GET_I64(cur_op, 2);
                 cur_op += 10;
                 goto NEXT;
             OP(const_n32):
                 MVM_exception_throw_adhoc(tc, "const_n32 NYI");
             OP(const_n64):
-                GET_REG(cur_op, 0).n64 = MVM_BC_get_N64(cur_op, 2);
+                GET_REG(cur_op, 0).n64 = GET_N64(cur_op, 2);
                 cur_op += 10;
                 goto NEXT;
             OP(const_s):
@@ -602,11 +599,11 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
                 cur_op += 6;
                 goto NEXT;
             OP(argconst_i):
-                tc->cur_frame->args[GET_UI16(cur_op, 0)].i64 = MVM_BC_get_I64(cur_op, 2);
+                tc->cur_frame->args[GET_UI16(cur_op, 0)].i64 = GET_I64(cur_op, 2);
                 cur_op += 10;
                 goto NEXT;
             OP(argconst_n):
-                tc->cur_frame->args[GET_UI16(cur_op, 0)].n64 = MVM_BC_get_N64(cur_op, 2);
+                tc->cur_frame->args[GET_UI16(cur_op, 0)].n64 = GET_N64(cur_op, 2);
                 cur_op += 10;
                 goto NEXT;
             OP(argconst_s):
@@ -826,7 +823,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
                 cur_op += 4;
                 goto NEXT;
             OP(jumplist): {
-                MVMint64 num_labels = MVM_BC_get_I64(cur_op, 0);
+                MVMint64 num_labels = GET_I64(cur_op, 0);
                 MVMint64 input = GET_REG(cur_op, 8).i64;
                 cur_op += 10;
                 /* the goto ops are guaranteed valid/existent by validation.c */
@@ -1054,21 +1051,21 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
             }
             OP(throwcatdyn): {
                 MVMRegister *rr  = &GET_REG(cur_op, 0);
-                MVMuint32    cat = (MVMuint32)MVM_BC_get_I64(cur_op, 2);
+                MVMuint32    cat = (MVMuint32)GET_I64(cur_op, 2);
                 cur_op += 4;
                 MVM_exception_throwcat(tc, MVM_EX_THROW_DYN, cat, rr);
                 goto NEXT;
             }
             OP(throwcatlex): {
                 MVMRegister *rr  = &GET_REG(cur_op, 0);
-                MVMuint32    cat = (MVMuint32)MVM_BC_get_I64(cur_op, 2);
+                MVMuint32    cat = (MVMuint32)GET_I64(cur_op, 2);
                 cur_op += 4;
                 MVM_exception_throwcat(tc, MVM_EX_THROW_LEX, cat, rr);
                 goto NEXT;
             }
             OP(throwcatlexotic): {
                 MVMRegister *rr  = &GET_REG(cur_op, 0);
-                MVMuint32    cat = (MVMuint32)MVM_BC_get_I64(cur_op, 2);
+                MVMuint32    cat = (MVMuint32)GET_I64(cur_op, 2);
                 cur_op += 4;
                 MVM_exception_throwcat(tc, MVM_EX_THROW_LEXOTIC, cat, rr);
                 goto NEXT;
@@ -3500,7 +3497,7 @@ void MVM_interp_run(MVMThreadContext *tc, void (*initial_invoke)(MVMThreadContex
             }
             OP(wval_wide): {
                 MVMint16 dep = GET_I16(cur_op, 2);
-                MVMint64 idx = MVM_BC_get_I64(cur_op, 4);
+                MVMint64 idx = GET_I64(cur_op, 4);
                 GET_REG(cur_op, 0).o = MVM_sc_get_sc_object(tc, cu, dep, idx);
                 cur_op += 12;
                 goto NEXT;
