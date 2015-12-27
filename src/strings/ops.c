@@ -109,6 +109,10 @@ MVMint64 MVM_string_substrings_equal_nocheck(MVMThreadContext *tc, MVMString *a,
     MVMGraphemeIter gib;
     MVMint64 i;
 
+    /* Empty strings are equal */
+    if (length == 0)
+        return 1;
+
     /* Fast paths when storage types are identical. */
     switch (a->body.storage_type) {
     case MVM_STRING_GRAPHEME_32:
