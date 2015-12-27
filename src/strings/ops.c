@@ -110,7 +110,7 @@ MVMint64 MVM_string_substrings_equal_nocheck(MVMThreadContext *tc, MVMString *a,
     MVMint64 i;
 
     /* Empty strings are equal */
-    if (length == 0)
+    if (!length)
         return 1;
 
     /* Fast paths when storage types are identical. */
@@ -1106,11 +1106,13 @@ MVMString * MVM_string_join(MVMThreadContext *tc, MVMString *separator, MVMObjec
             switch (piece->body.storage_type) {
             case MVM_STRING_GRAPHEME_32: {
                 MVMint64 pgraphs = MVM_string_graphs(tc, piece);
-                memcpy(
-                    result->body.storage.blob_32 + position,
-                    piece->body.storage.blob_32,
-                    pgraphs * sizeof(MVMGrapheme32));
-                position += pgraphs;
+                if (pgraphs) {
+                    memcpy(
+                        result->body.storage.blob_32 + position,
+                        piece->body.storage.blob_32,
+                        pgraphs * sizeof(MVMGrapheme32));
+                    position += pgraphs;
+                }
                 break;
             }
             /* XXX Can special-case 8-bit NFG and ASCII here too. */
