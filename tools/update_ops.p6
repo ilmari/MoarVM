@@ -12,7 +12,7 @@ class Op {
     has %.adverbs;
 }
 
-sub MAIN($file = "src/core/oplist") {
+sub MAIN($file = "src/core/oplist", $interp_file = "src/core/interp.c") {
     # Parse the ops file to get the various ops.
     my @ops = parse_ops($file);
     say "Parsed {+@ops} total ops from src/core/oplist";
@@ -27,6 +27,12 @@ sub MAIN($file = "src/core/oplist") {
     $hf.say('');
     $hf.say('MVM_PUBLIC const MVMOpInfo * MVM_op_get_op(unsigned short op);');
     $hf.close;
+
+    # Check interp.c matches
+    my @interp_ops = parse_interp($interp_file);
+    for @ops Z @interp_ops -> ($op, $iop) {
+        say "{$op.name} != $iop" unless $op.name eq $iop;
+    }
 
     # Generate C file
     my $cf = open("src/core/ops.c", :w);
@@ -95,6 +101,16 @@ sub parse_ops($file) {
                 adverbs  => %adverbs
             ));
             $i = $i + 1;
+        }
+    }
+    return @ops;
+}
+
+sub parse_interp($file) {
+    my @ops;
+    for $file.IO.lines -> $line {
+        if $line ~~ /^ \s+ OP \( (\w+) \) :/ {
+            @ops.push($0);
         }
     }
     return @ops;
